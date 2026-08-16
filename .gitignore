@@ -1,0 +1,6 @@
+node_modules/
+trend.jsonl
+*.log
+.DS_Store
+.env
+scan-*.json

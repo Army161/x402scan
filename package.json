@@ -1,0 +1,28 @@
+{
+  "name": "x402scan",
+  "version": "0.1.0",
+  "description": "Measure the machine-payment economy from chain data. Tells you whether x402 agentic payment volume is real commerce or a test harness.",
+  "keywords": ["x402", "ai-agents", "agentic-payments", "xrpl", "base", "mcp", "blockchain-analytics"],
+  "license": "MIT",
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "bin": {
+    "x402scan": "./src/cli.mjs"
+  },
+  "main": "./src/index.mjs",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./authenticity": "./src/authenticity.mjs",
+    "./chains/xrpl": "./src/chains/xrpl.mjs",
+    "./chains/base": "./src/chains/base.mjs"
+  },
+  "files": ["src", "README.md", "LICENSE"],
+  "scripts": {
+    "scan": "node src/cli.mjs scan",
+    "watch": "node src/cli.mjs watch",
+    "mcp": "node src/cli.mjs mcp",
+    "test": "node test/authenticity.test.mjs"
+  },
+  "dependencies": {},
+  "repository": { "type": "git", "url": "https://github.com/YOUR_USER/x402scan" }
+}
