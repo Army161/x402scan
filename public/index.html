@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>x402scan — is agentic payment volume real?</title>
+<meta name="description" content="Measures x402 machine-payment settlement from chain data and scores whether it behaves like real commerce or a test harness.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>📐</text></svg>">
+<style>
+  :root{
+    --ground:#f6f7f7; --surface:#fff; --ink:#101617; --muted:#55605f; --faint:#828d8c;
+    --rule:#dfe4e3; --rule-soft:#ecefee;
+    --signal:#0d5c56; --flag:#8a5a00; --bad:#8c2f22; --bad-wash:#f7ecea;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:ui-sans-serif,-apple-system,"Segoe UI",Roboto,system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#101314; --surface:#171b1c; --ink:#e8eceb; --muted:#9aa5a3; --faint:#6f7a79;
+      --rule:#262c2d; --rule-soft:#1e2324;
+      --signal:#5fbfae; --flag:#d9a441; --bad:#e8836f; --bad-wash:#251714;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#101314; --surface:#171b1c; --ink:#e8eceb; --muted:#9aa5a3; --faint:#6f7a79;
+    --rule:#262c2d; --rule-soft:#1e2324;
+    --signal:#5fbfae; --flag:#d9a441; --bad:#e8836f; --bad-wash:#251714;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font:16px/1.6 var(--sans);
+    -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+  .wrap{max-width:60rem;margin:0 auto;padding:0 1.5rem 5rem;display:flex;flex-direction:column}
+
+  header{padding:3rem 0 0;display:flex;flex-direction:column;gap:1.4rem}
+  .strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:.1rem 1.5rem;
+    padding:.8rem 0;border-top:2px solid var(--ink);border-bottom:1px solid var(--rule)}
+  .strip div{display:flex;flex-direction:column;gap:.1rem}
+  .strip dt{font:600 .61rem/1.4 var(--mono);letter-spacing:.15em;text-transform:uppercase;color:var(--faint)}
+  .strip dd{margin:0;font:500 .78rem/1.4 var(--mono)}
+  h1{font-size:clamp(1.7rem,4.4vw,2.5rem);line-height:1.1;letter-spacing:-.028em;font-weight:700;margin:0;text-wrap:balance}
+  .lede{color:var(--muted);margin:0;max-width:42rem;text-wrap:pretty}
+
+  .controls{display:flex;gap:.55rem;flex-wrap:wrap;align-items:center;padding:1.6rem 0 0}
+  button{font:600 .9rem/1 var(--sans);padding:.62rem 1.1rem;border-radius:4px;cursor:pointer;
+    border:1px solid var(--rule);background:var(--surface);color:var(--ink)}
+  button.primary{background:var(--signal);border-color:var(--signal);color:var(--ground)}
+  button:hover{filter:brightness(1.08)}
+  button[disabled]{opacity:.5;cursor:progress}
+  button:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+  select{font:.9rem var(--sans);padding:.6rem .7rem;border-radius:4px;border:1px solid var(--rule);
+    background:var(--surface);color:var(--ink)}
+  .status{font:.84rem var(--mono);color:var(--faint)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(20rem,1fr));gap:1rem;padding:1.6rem 0 0}
+  .card{background:var(--surface);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+  .card-head{padding:1rem 1.2rem;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:baseline;gap:1rem}
+  .card-head h2{margin:0;font-size:1.05rem;font-weight:650}
+  .card-head span{font:.68rem var(--mono);color:var(--faint)}
+  .score{padding:1.2rem;display:flex;flex-direction:column;gap:.5rem;border-bottom:1px solid var(--rule-soft)}
+  .score-row{display:flex;align-items:baseline;gap:.7rem}
+  .score-n{font:700 2.6rem/1 var(--mono);letter-spacing:-.03em}
+  .score-of{font:.8rem var(--mono);color:var(--faint)}
+  .band{font:600 .64rem/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;padding:.32rem .55rem;border-radius:3px}
+  .meter{height:7px;border-radius:4px;background:var(--rule-soft);overflow:hidden}
+  .meter i{display:block;height:100%;border-radius:4px;transition:width .6s cubic-bezier(.2,.8,.3,1)}
+  .verdict{font-size:.9rem;color:var(--muted);margin:0}
+  dl.metrics{margin:0;padding:.5rem 1.2rem 1rem;display:grid;grid-template-columns:1fr auto;gap:.05rem 1rem}
+  dl.metrics dt{font-size:.85rem;color:var(--muted);padding:.32rem 0}
+  dl.metrics dd{margin:0;font:500 .85rem var(--mono);text-align:right;padding:.32rem 0}
+  .signals{border-top:1px solid var(--rule-soft);padding:.85rem 1.2rem 1.1rem;display:flex;flex-direction:column;gap:.5rem}
+  .signals h3{margin:0 0 .1rem;font:600 .61rem/1.4 var(--mono);letter-spacing:.15em;text-transform:uppercase;color:var(--faint)}
+  .sig{display:grid;grid-template-columns:9rem 1fr 2.2rem;gap:.6rem;align-items:center;font-size:.8rem}
+  .sig b{font-weight:500;color:var(--muted)}
+  .sig .track{height:4px;border-radius:3px;background:var(--rule-soft);overflow:hidden}
+  .sig .track i{display:block;height:100%;background:var(--signal)}
+  .sig var{font:500 .78rem var(--mono);font-style:normal;text-align:right}
+  .sig-note{font-size:.76rem;color:var(--faint);margin:0}
+
+  .err{background:var(--bad-wash);border:1px solid var(--bad);color:var(--bad);border-radius:6px;
+    padding:1rem 1.2rem;font-size:.9rem}
+  .skeleton{padding:2.4rem 1.2rem;text-align:center;color:var(--faint);font:.85rem var(--mono)}
+
+  section.explain{padding:3rem 0 0;display:flex;flex-direction:column;gap:1rem}
+  section.explain h2{font:600 .66rem/1.4 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+    color:var(--signal);margin:0;padding-bottom:.85rem;border-bottom:1px solid var(--rule)}
+  .scroll{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:32rem}
+  th,td{text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--rule-soft)}
+  th{font:600 .61rem/1.4 var(--mono);letter-spacing:.11em;text-transform:uppercase;color:var(--faint)}
+  code{font:.85em var(--mono);background:var(--rule-soft);padding:.15em .4em;border-radius:3px}
+  p{margin:0;text-wrap:pretty}
+  a{color:var(--signal)}
+  footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--rule);font-size:.83rem;color:var(--faint);display:flex;flex-direction:column;gap:.6rem}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <dl class="strip">
+    <div><dt>Instrument</dt><dd>x402scan v0.1.0</dd></div>
+    <div><dt>Method</dt><dd>Direct chain scan</dd></div>
+    <div><dt>Observed</dt><dd id="observed">—</dd></div>
+    <div><dt>Sample</dt><dd id="sample">—</dd></div>
+  </dl>
+  <h1>Is agentic payment volume real, or a test harness?</h1>
+  <p class="lede">x402 transactions cost about $0.0002, so counting them measures enthusiasm, not commerce. This measures whether settlement <em>behaves</em> like real metered billing — live, from the chains, right now.</p>
+</header>
+
+<div class="controls">
+  <button class="primary" id="run">Run live scan</button>
+  <select id="units" aria-label="Sample size">
+    <option value="60">60 units · fast</option>
+    <option value="150" selected>150 units · balanced</option>
+  </select>
+  <span class="status" id="status"></span>
+</div>
+
+<div class="grid" id="results">
+  <div class="card"><div class="skeleton">Press “Run live scan” to measure both chains.</div></div>
+</div>
+
+<section class="explain">
+  <h2>How the score works</h2>
+  <p>Four signals a test harness cannot cheaply fake. Signals that cannot be measured on a chain are omitted and the remaining weights renormalised — a chain is never penalised for our instrumentation gap.</p>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Signal</th><th>Weight</th><th>What it catches</th></tr></thead>
+      <tbody>
+        <tr><td>Value diversity</td><td>40%</td><td>Metered billing produces computed amounts like <code>0.020325</code>. Loops produce <code>0.001</code>.</td></tr>
+        <tr><td>Payer diversity</td><td>25%</td><td>Real demand comes from many wallets, unevenly.</td></tr>
+        <tr><td>Failure presence</td><td>15%</td><td>Real commerce fails 1–5%. A flawless success rate is a controlled environment.</td></tr>
+        <tr><td>Tail presence</td><td>20%</td><td>Real distributions have outliers. If max ≈ p95, nobody buys anything unusual.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="sig-note">Bands — <strong>70+</strong> commerce · <strong>45–69</strong> mixed · <strong>25–44</strong> mostly synthetic · <strong>&lt;25</strong> test harness. Below 20 observed payments, no score is returned.</p>
+</section>
+
+<section class="explain">
+  <h2>API</h2>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Endpoint</th><th>Returns</th></tr></thead>
+      <tbody>
+        <tr><td><code>GET /api/scan?chain=base&amp;units=150</code></td><td>One chain, full detail</td></tr>
+        <tr><td><code>GET /api/compare?units=150</code></td><td>All chains, ranked</td></tr>
+        <tr><td><code>GET /api/health</code></td><td>Capabilities and tiers</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="sig-note">Free tier needs no key: 150 units, 5-minute cache. Higher sample sizes and fresher data need an <code>x-api-key</code>. CLI and MCP server: <code>npx x402scan</code>.</p>
+</section>
+
+<footer>
+  <p><strong>Caveat, stated plainly:</strong> each scan samples a short recent window (roughly 2–10 minutes) and extrapolates daily figures from it. That is order of magnitude, not accounting. Small samples move the score — a 60-unit Base scan read 89 where a 250-unit scan read 71. Diurnal and weekly patterns are invisible in a single sample.</p>
+  <p>Public RPC endpoints throttle under load. Always check <code>sampling.scanned</code> against <code>sampling.requested</code> before quoting a number.</p>
+</footer>
+
+</div>
+
+<script type="module">
+const $ = id => document.getElementById(id);
+const BANDS = {
+  commerce:          { color: 'var(--signal)', label: 'commerce' },
+  mixed:             { color: 'var(--flag)',   label: 'mixed' },
+  'mostly-synthetic':{ color: 'var(--bad)',    label: 'mostly synthetic' },
+  'test-harness':    { color: 'var(--bad)',    label: 'test harness' },
+  'insufficient-data':{color: 'var(--faint)',  label: 'insufficient data' },
+};
+const fmtMoney = n => n == null ? '—' : '$' + Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
+const fmtNum   = n => n == null ? '—' : Number(n).toLocaleString();
+
+function card(c) {
+  if (c.error) return `<div class="card"><div class="card-head"><h2>${c.chain}</h2></div>
+    <div class="err">${escape(c.error)}</div></div>`;
+
+  const a = c.authenticity || {};
+  const band = BANDS[a.band] || BANDS['insufficient-data'];
+  const signals = Object.entries(a.signals || {}).map(([name, s]) => `
+    <div class="sig">
+      <b>${label(name)}</b>
+      <span class="track"><i style="width:${s.score}%"></i></span>
+      <var>${s.score}</var>
+    </div>
+    <p class="sig-note">${escape(s.evidence)}</p>`).join('');
+
+  return `<div class="card">
+    <div class="card-head">
+      <h2>${escape(c.label || c.chain)}</h2>
+      <span>${escape(c.fingerprint || '')}</span>
+    </div>
+    <div class="score">
+      <div class="score-row">
+        <span class="score-n" style="color:${band.color}">${a.score ?? '—'}</span>
+        <span class="score-of">/100</span>
+        <span class="band" style="color:${band.color};background:color-mix(in srgb, ${band.color} 12%, transparent)">${band.label}</span>
+      </div>
+      <div class="meter"><i style="width:${a.score ?? 0}%;background:${band.color}"></i></div>
+      <p class="verdict">${escape(a.note || '')}</p>
+      ${a.caveat ? `<p class="sig-note">Note: ${escape(a.caveat)}</p>` : ''}
+    </div>
+    <dl class="metrics">
+      <dt>Payments in window</dt><dd>${fmtNum(c.payments)}</dd>
+      <dt>Per hour</dt><dd>${fmtNum(c.perHour)}</dd>
+      <dt>Unique payers</dt><dd>${fmtNum(c.payers)}</dd>
+      <dt>Recipients</dt><dd>${fmtNum(c.recipients)}</dd>
+      <dt>Facilitators</dt><dd>${fmtNum(c.facilitators)}</dd>
+      <dt>Distinct values</dt><dd>${fmtNum(c.values?.distinct)}</dd>
+      <dt>Median payment</dt><dd>${fmtNum(c.values?.median)} ${escape(c.nativeAsset || '')}</dd>
+      <dt>Largest payment</dt><dd>${fmtNum(c.values?.max)} ${escape(c.nativeAsset || '')}</dd>
+      <dt>Top-3 recipients</dt><dd>${c.concentration?.top3RecipientShare ?? '—'}%</dd>
+      <dt>Settled per day</dt><dd>${fmtMoney(c.usd?.perDay)}</dd>
+    </dl>
+    ${signals ? `<div class="signals"><h3>Signals</h3>${signals}</div>` : ''}
+  </div>`;
+}
+
+const label = n => n.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
+const escape = s => String(s ?? '').replace(/[&<>"']/g, m =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+
+async function run() {
+  const btn = $('run'), units = $('units').value;
+  btn.disabled = true;
+  $('status').textContent = 'scanning both chains — 30–90s…';
+  $('results').innerHTML = '<div class="card"><div class="skeleton">Reading live chain data…</div></div>';
+
+  try {
+    const res = await fetch(`/api/compare?units=${encodeURIComponent(units)}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+    $('results').innerHTML = data.chains.map(card).join('');
+    $('observed').textContent = (data.observedAt || '').slice(0, 10) || '—';
+    const ok = data.chains.find(c => !c.error);
+    $('sample').textContent = ok ? `${ok.sampling.scanned}/${ok.sampling.requested} ${ok.sampling.unit}` : '—';
+    $('status').textContent = data.cache === 'hit' ? 'cached result' : 'live';
+  } catch (e) {
+    $('results').innerHTML = `<div class="card"><div class="err">${escape(e.message)}<br><br>
+      Public RPCs throttle under load — try a smaller sample, or again shortly.</div></div>`;
+    $('status').textContent = '';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+$('run').addEventListener('click', run);
+</script>
+</body>
+</html>

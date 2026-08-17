@@ -177,6 +177,54 @@ Then just ask: *"Is x402 volume on Base real, or mostly testing?"*
 
 ---
 
+## Hosted dashboard & Data API
+
+```bash
+npx vercel --prod          # from the repo root; no build step
+```
+
+Static dashboard plus three serverless endpoints. No framework, no bundler — the
+API imports the same `src/` the CLI uses, so there is exactly one implementation
+of the score.
+
+| Endpoint | Returns |
+|---|---|
+| `GET /api/scan?chain=base&units=150` | One chain, full detail |
+| `GET /api/compare?units=150` | All chains, ranked by score |
+| `GET /api/health` | Capabilities and tier limits |
+
+```bash
+curl 'https://YOUR_DEPLOY.vercel.app/api/compare?units=150'
+```
+
+### Tiers
+
+| Tier | Auth | Max units | Cache |
+|---|---|---|---|
+| **Free** | none | 150 | 5 min |
+| **Pro** | `x-api-key` | 1 000 | 1 min |
+| **Intel** | `x-api-key` | 4 000 | uncached |
+
+Requests above a tier's ceiling are **clamped, not rejected** — the response carries a
+`clamped` object saying what you asked for and what you got. Unrecognised keys fall back
+to free with a `warning` rather than a 401.
+
+Keys live in the `X402SCAN_KEYS` env var as comma-separated `key:tier` pairs. That is a
+deliberate placeholder: real billing is a later stage, and this is the seam it plugs into.
+
+Caching is not an optimisation here — a scan takes 30–90s and hammers public RPCs. The
+in-process memo plus CDN `s-maxage` is what keeps the free tier viable.
+
+### Local development
+
+```bash
+node scripts/dev-server.mjs     # http://localhost:3000
+```
+
+Mimics Vercel's function contract so handlers can be exercised without deploying.
+
+---
+
 ## Library
 
 ```js
