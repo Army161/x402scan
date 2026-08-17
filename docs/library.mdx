@@ -1,0 +1,59 @@
+---
+title: "Library"
+description: "Import the scanner and the score into your own tooling."
+---
+
+```bash
+npm install x402scan
+```
+
+## Scan a chain
+
+```js
+import { scanChain } from 'x402scan';
+
+const base = await scanChain('base', { units: 250 });
+
+console.log(base.authenticity.score);   // 71
+console.log(base.authenticity.band);    // 'commerce'
+console.log(base.usd.perDay);           // 9990.12
+```
+
+## Compare every chain
+
+```js
+import { scanAll, CHAIN_IDS } from 'x402scan';
+
+const { chains } = await scanAll(CHAIN_IDS, { units: 250 });
+// Failures are captured per chain as { chain, error }, never thrown.
+for (const c of chains) {
+  if (c.error) { console.warn(c.chain, c.error); continue; }
+  console.log(c.chain, c.authenticity.score);
+}
+```
+
+## Score your own measurements
+
+The scorer is independent of the scanners — feed it data from anywhere.
+
+```js
+import { authenticityScore } from 'x402scan/authenticity';
+
+authenticityScore({
+  payments: 842,
+  distinctValues: 340,
+  payers: 90,
+  failureRate: null,   // null = unmeasurable; omitted, weights renormalised
+  median: 0.005,
+  max: 24.368212,
+});
+```
+
+## Exports
+
+| Path | Contains |
+|---|---|
+| `x402scan` | `scanChain`, `scanAll`, `authenticityScore`, `priceUsd`, `CHAINS`, `CHAIN_IDS` |
+| `x402scan/authenticity` | `authenticityScore`, `BANDS` |
+| `x402scan/chains/xrpl` | XRPL adapter, `SOURCE_TAG`, `ENDPOINTS` |
+| `x402scan/chains/base` | Base adapter, `USDC`, `ENDPOINTS` |

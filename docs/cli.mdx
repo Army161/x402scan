@@ -1,0 +1,71 @@
+---
+title: "CLI"
+description: "Every command and flag."
+---
+
+## Commands
+
+| Command | Does |
+|---|---|
+| `x402scan scan [chain]` | Scan one chain, or all if omitted |
+| `x402scan watch` | Append one sample to a trend file |
+| `x402scan trend` | Print the recorded trend |
+| `x402scan mcp` | Run as an MCP server over stdio |
+| `x402scan chains` | List supported chains |
+
+## Flags
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--units <n>` | `250` | Ledgers or blocks to sample |
+| `--json` | off | Machine-readable output |
+| `--out <file>` | — | Append full JSON to a file |
+| `--trend <file>` | `./trend.jsonl` | Trend file for `watch` / `trend` |
+| `--price <n>` | live | Override the native-asset USD rate |
+| `--quiet` | off | Suppress progress |
+| `--no-color` | off | Disable ANSI colour |
+
+## Examples
+
+<CodeGroup>
+```bash Compare everything
+x402scan scan
+```
+```bash One chain, big sample
+x402scan scan base --units 500
+```
+```bash Pipe to jq
+x402scan scan xrpl --json | jq '.authenticity.score'
+```
+```bash Archive every scan
+x402scan scan --out ~/x402/scans.jsonl
+```
+</CodeGroup>
+
+## Tracking a trend
+
+A single scan is a snapshot. Volume moves, and one 8-minute window cannot tell you which
+direction.
+
+```bash
+x402scan watch --trend ~/.x402scan/trend.jsonl
+x402scan trend --trend ~/.x402scan/trend.jsonl
+```
+
+<Tabs>
+  <Tab title="macOS / Linux (cron)">
+    ```bash
+    0 9 * * 1 /usr/local/bin/x402scan watch --trend ~/.x402scan/trend.jsonl
+    ```
+  </Tab>
+  <Tab title="Windows (Task Scheduler)">
+    ```powershell
+    schtasks /create /tn "x402scan weekly" /tr "x402scan watch" /sc weekly /d MON /st 09:00
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+`watch` writes a compact row per run — score, payments, payers, distinct values, $/day, and
+the price rate with its provenance. Full payloads go to `--out`.
+</Note>

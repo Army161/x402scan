@@ -1,0 +1,82 @@
+---
+title: "Quickstart"
+description: "First measurement in under a minute."
+---
+
+## Run without installing
+
+<CodeGroup>
+```bash npm
+npx x402scan scan base
+```
+```bash pnpm
+pnpm dlx x402scan scan base
+```
+</CodeGroup>
+
+That is the whole setup. No install, no config, no key.
+
+## Install
+
+<Tabs>
+  <Tab title="macOS / Linux">
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/YOUR_USER/x402scan/main/scripts/install.sh | bash
+    ```
+    Or: `npm install -g x402scan`
+  </Tab>
+  <Tab title="Windows">
+    ```powershell
+    irm https://raw.githubusercontent.com/YOUR_USER/x402scan/main/scripts/install.ps1 | iex
+    ```
+    Or: `npm install -g x402scan`
+  </Tab>
+  <Tab title="From source">
+    ```bash
+    git clone https://github.com/YOUR_USER/x402scan
+    cd x402scan
+    npm link
+    ```
+    No `npm install` — there are no dependencies to fetch.
+  </Tab>
+</Tabs>
+
+<Note>Requires Node 18+ for built-in `fetch` and `AbortSignal.timeout`.</Note>
+
+## Reading the output
+
+```
+Base · EIP-3009 transferWithAuthorization on USDC
+  sampled 250/250 blocks · 498s window
+
+  Authenticity    71/100  ██████████████░░░░░░  commerce
+  Behaves like real metered commerce.
+
+  payments           842
+  unique payers      90
+  distinct values    340
+  settled/day        $9,990
+```
+
+<AccordionGroup>
+  <Accordion title="Always check sampled X/Y">
+    `sampled 250/250` means every requested unit came back. Public RPCs throttle —
+    `138/250` means you are looking at a thinner sample than you asked for. Never quote a
+    figure without checking this.
+  </Accordion>
+  <Accordion title="Use --units 250 or more for anything quotable">
+    Small samples inflate the score. Base read 89 at 60 units and 71 at 250. The
+    *direction* is stable; the absolute number needs a real sample.
+  </Accordion>
+  <Accordion title="settled/day is an extrapolation">
+    A scan samples 2–10 minutes and multiplies up. Order of magnitude, not accounting.
+    Use `x402scan watch` for a trend.
+  </Accordion>
+</AccordionGroup>
+
+## Next
+
+<CardGroup cols={2}>
+  <Card title="How the score works" icon="calculator" href="/authenticity-score">The four signals</Card>
+  <Card title="Connect an AI agent" icon="robot" href="/mcp">MCP in one command</Card>
+</CardGroup>

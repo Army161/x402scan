@@ -1,0 +1,51 @@
+---
+title: "Base"
+description: "USDC settlement via EIP-3009. The chain where real commerce shows up."
+---
+
+| | |
+|---|---|
+| **Fingerprint** | EIP-3009 `transferWithAuthorization` on USDC `0x8335…2913` |
+| **Asset** | USDC (6 decimals) |
+| **Unit** | Blocks (~2s) |
+| **Typical score** | **71** at 250 units — `commerce` |
+
+## Why Base scores well
+
+<CardGroup cols={2}>
+  <Card title="340 distinct values" icon="chart-simple">
+    Across 842 payments. Amounts like `$0.020325` — computed, not typed.
+  </Card>
+  <Card title="90 unique payers" icon="users">
+    Unevenly distributed: 354, 156, 44, 43, 25, then a long tail.
+  </Card>
+  <Card title="29 facilitators" icon="share-nodes">
+    Multiple independent facilitators competing — an ecosystem, not one vendor's demo.
+  </Card>
+  <Card title="4,874x tail" icon="arrow-trend-up">
+    Max $24.37 against a $0.005 median. Real outliers.
+  </Card>
+</CardGroup>
+
+## The honest counterweight
+
+<Warning>
+Recipient concentration is **worse** than XRPL's: top recipient 42%, top two 83%, across
+just 34 recipients. "The Base x402 market" is substantially two companies.
+
+That is a normal early-marketplace shape — many buyers, few sellers — but the addressable
+list of services today is very short.
+</Warning>
+
+Total settled value is roughly **$10,000/day** ecosystem-wide, or ~$3.6M/year. Real, and
+still small.
+
+## Payer identity
+
+EIP-3009 carries the payer inside the signed authorization, so `from` is the **actual
+spender** even though a facilitator submits the transaction. This is why Base payer counts
+are more trustworthy than XRPL's.
+
+## Endpoints
+
+Defaults to `mainnet.base.org` and `base-rpc.publicnode.com`, rotating on failure.

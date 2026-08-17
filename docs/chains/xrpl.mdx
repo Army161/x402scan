@@ -1,0 +1,53 @@
+---
+title: "XRP Ledger"
+description: "SourceTag fingerprint. The chain that motivated this tool."
+---
+
+| | |
+|---|---|
+| **Fingerprint** | `SourceTag 804681468` (t54 facilitator default) |
+| **Asset** | XRP, plus RLUSD and other IOUs |
+| **Unit** | Validated ledgers (~3.5s) |
+| **Typical score** | **8** at 138 units — `test-harness` |
+
+## What the scan found
+
+<Warning>
+**156 payments. Three distinct values.** `0.001`, `0.002`, `0.003` XRP. Nothing else.
+
+Nine unique payers, each firing 17–18 payments in the same window — near-identical counts,
+metronomic spacing. 100% success rate. Total value across all 156 payments: **$0.23**.
+
+Extrapolated, the entire XRPL agentic economy moves roughly **$42/day**.
+</Warning>
+
+Published figures for the same period reported 1.4M+ cumulative transactions and ~1,064
+payments/hour. **Both are accurate.** The rate reproduced exactly in our scan. The counts
+are simply not measuring commerce.
+
+## Deterministic finality
+
+XRPL settles in 3–5 seconds with no reorgs, so the scanner needs no confirmation depth or
+rollback handling. XRPL is the *easier* chain to instrument — it just has little to
+instrument yet.
+
+## The open question
+
+<Note>
+Nine payers is not proof of nine users. In a facilitator model, t54 may submit settlements
+from a pool of relay accounts on behalf of many clients.
+
+The value signals are unaffected: a median of 0.001 XRP across three distinct amounts with
+zero failures is a test-harness signature regardless of who submitted it.
+</Note>
+
+## Why it still matters
+
+XRPL has on-ledger compliance primitives no other major chain offers — Credentials (live
+Sept 2025) and Permissioned Domains (live Feb 2026). When institutional agentic volume
+arrives, that infrastructure is already there. Today it is not being used.
+
+## Endpoints
+
+Defaults to `xrplcluster.com` and `s2.ripple.com:51234`. The former returns `FUP exceeded`
+under load — always check `sampling.scanned` against `sampling.requested`.

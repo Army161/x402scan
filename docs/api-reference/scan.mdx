@@ -1,0 +1,66 @@
+---
+title: "GET /api/scan"
+description: "Measure one chain."
+---
+
+```bash
+curl 'https://YOUR_DEPLOY.vercel.app/api/scan?chain=base&units=150'
+```
+
+## Query parameters
+
+| Parameter | Type | Required | Default |
+|---|---|---|---|
+| `chain` | `xrpl` or `base` | **yes** | — |
+| `units` | number | no | `150` |
+| `key` | string | no | — (or `x-api-key` header) |
+
+## Response
+
+```json
+{
+  "chain": "base",
+  "label": "Base",
+  "observedAt": "2026-08-17T16:04:22.118Z",
+  "fingerprint": "EIP-3009 transferWithAuthorization on USDC",
+  "authenticity": {
+    "score": 71,
+    "band": "commerce",
+    "note": "Behaves like real metered commerce.",
+    "signals": {
+      "valueDiversity": {
+        "score": 100,
+        "weight": 0.471,
+        "evidence": "340 distinct values across 842 payments (40.4%)"
+      }
+    },
+    "omittedSignals": ["failurePresence"]
+  },
+  "payments": 842,
+  "perHour": 6087,
+  "payers": 90,
+  "recipients": 34,
+  "facilitators": 29,
+  "values": { "median": 0.005, "max": 24.368212, "distinct": 340, "total": 57.5737 },
+  "usd": { "totalInWindow": 57.5737, "perDay": 9990.12 },
+  "sampling": { "requested": 150, "scanned": 150, "missing": 0, "windowSeconds": 298 },
+  "concentration": { "top1RecipientShare": 42, "top3RecipientShare": 86.7 },
+  "tier": "free",
+  "cache": "miss"
+}
+```
+
+<Note>
+**Always check `sampling.scanned` against `sampling.requested`.** Public RPCs throttle, and a
+thin sample produces an inflated score.
+</Note>
+
+## Notable fields
+
+| Field | Meaning |
+|---|---|
+| `authenticity.omittedSignals` | Signals that could not be measured on this chain |
+| `values.distinct` | Distinct payment amounts — the strongest signal |
+| `usd.perDay` | **Extrapolated** from the sampled window |
+| `clamped` | Present when `units` exceeded your tier ceiling |
+| `cache` | `hit` or `miss` |

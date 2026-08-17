@@ -1,0 +1,53 @@
+---
+title: "Limitations"
+description: "Where this tool is wrong, stated plainly."
+---
+
+A measurement tool that hides its error bars is worthless. These are ours.
+
+<AccordionGroup>
+  <Accordion title="Sampling, not census" icon="clock">
+    A scan reads a short recent window — roughly 2–10 minutes. Daily figures extrapolate
+    that window across 24 hours.
+
+    **Order of magnitude, not accounting.** Diurnal and weekly patterns are invisible in a
+    single sample. Use `x402scan watch` on a schedule for anything trend-shaped.
+  </Accordion>
+  <Accordion title="Small samples inflate the score" icon="chart-line">
+    | Sample | Base score |
+    |---|---|
+    | 40 units | 81 |
+    | 60 units | 89 |
+    | 250 units | **71** |
+
+    The direction is stable — Base always beats XRPL by a wide margin — but the absolute
+    number needs **250+ units** before it is quotable.
+  </Accordion>
+  <Accordion title="Base failure rate is unmeasurable" icon="eye-slash">
+    Payments are decoded from block calldata, which cannot reveal reverts. Reported as
+    `null` and omitted from scoring rather than guessed. Receipt sampling would fix it at
+    the cost of one RPC call per payment.
+  </Accordion>
+  <Accordion title="Public RPCs throttle" icon="gauge-high">
+    `xrplcluster.com` returns `FUP exceeded` under load. The scanner rotates endpoints and
+    reports what it actually got. **Always compare `sampling.scanned` to
+    `sampling.requested`** before trusting a result.
+  </Accordion>
+  <Accordion title="Facilitator pooling on XRPL" icon="share-nodes">
+    On XRPL the submitter is the payer, so a facilitator relaying for many clients would
+    compress the payer count. XRPL's nine payers may be relay accounts rather than nine end
+    users.
+
+    The value signals are unaffected — a median of 0.001 across three distinct amounts is
+    damning regardless of who submitted it.
+  </Accordion>
+  <Accordion title="Two chains" icon="link">
+    XRPL and Base. Solana is the obvious next adapter and carries roughly 22% of x402
+    volume. See [adding a chain](/chains/adding-a-chain).
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+If a number from this tool is going somewhere that matters: run 250+ units, check the
+sampling ratio, and take two samples hours apart.
+</Tip>

@@ -1,0 +1,53 @@
+---
+title: "Why transaction counts lie"
+description: "The economics that make count-based metrics worthless — and what to use instead."
+---
+
+## The arithmetic
+
+| | |
+|---|---|
+| Cost per x402 transaction on XRPL | **$0.0002** |
+| Cost to manufacture 1,000,000 payments | **~$200** |
+| Total fees across 1.4M real settled XRPL payments | **~$280** |
+
+A metric that costs $200 to move by a million units is not measuring demand. It is
+measuring willingness to spend $200.
+
+## What gets reported vs. what is true
+
+<Steps>
+  <Step title="A protocol launches and reports transaction counts">
+    Counts rise fast. Press coverage follows. The number is real — the transactions
+    genuinely settled on-chain.
+  </Step>
+  <Step title="Nobody separates commerce from testing">
+    Integration suites, demos, load tests, and looping agents all produce identical
+    on-chain artefacts to real purchases.
+  </Step>
+  <Step title="Valuations and roadmaps get built on the number">
+    x402 carried a multi-billion-dollar ecosystem valuation against roughly $28,000 in
+    daily volume, much of it publicly described as testing.
+  </Step>
+  <Step title="Value diversity gives it away">
+    Real billing produces computed amounts. Loops produce round ones. This is trivially
+    measurable and nobody was measuring it.
+  </Step>
+</Steps>
+
+## What to measure instead
+
+<Card title="Value diversity" icon="chart-simple">
+  Distinct payment amounts ÷ payments. Metered billing charges `0.020325` because that is
+  what 6,775 tokens cost. A loop charges `0.001` because someone typed it.
+
+  **XRPL: 3 distinct values across 156 payments. Base: 340 across 842.**
+</Card>
+
+The other three signals — payer diversity, failure presence, tail presence — are covered
+in [the Authenticity Score](/authenticity-score).
+
+<Tip>
+This is not an argument that x402 is fake. Base shows genuinely real metered commerce.
+It is an argument that **counts cannot distinguish the two**, and until now nothing did.
+</Tip>

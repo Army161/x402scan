@@ -1,0 +1,72 @@
+---
+title: "Adding a chain"
+description: "Implement one function, register it, done."
+---
+
+## The contract
+
+Create `src/chains/<id>.mjs` exporting a `scan()` returning the normalised shape.
+
+```js
+export const ID = 'solana';
+export const LABEL = 'Solana';
+export const ENDPOINTS = ['https://api.mainnet-beta.solana.com'];
+
+export async function scan({ units = 250, concurrency = 4, endpoints = ENDPOINTS, onProgress } = {}) {
+  // 1. Find the head
+  // 2. Sample `units` back from it, bounded concurrency
+  // 3. Filter to x402 settlements by this chain's fingerprint
+  // 4. Return the normalised object
+}
+```
+
+## Required fields
+
+| Field | Why |
+|---|---|
+| `chain`, `label`, `nativeAsset` | Identity and price lookup |
+| `fingerprint` | Human-readable description of how payments were identified |
+| `sampling.{requested,scanned,missing,windowSeconds}` | Honesty about coverage |
+| `payments`, `payers`, `recipients`, `facilitators` | Diversity signals |
+| `failureRate` | `null` if unmeasurable — **never guess** |
+| `values` | From `summarise()` — includes `distinct`, the key signal |
+| `concentration` | Top recipients and payers |
+
+<Warning>
+If your chain cannot observe transaction failure, set `failureRate: null`. Do **not** default
+to `0` — the scorer reads a perfect success rate as a synthetic-traffic signal, and you would
+be penalising your chain for a gap in your adapter.
+</Warning>
+
+## Register it
+
+```js
+// src/index.mjs
+import * as solana from './chains/solana.mjs';
+export const CHAINS = { xrpl, base, solana };
+```
+
+CLI, MCP server, API and dashboard all pick it up automatically — there is one registry and
+everything reads from it.
+
+## Finding a fingerprint
+
+<Steps>
+  <Step title="Find the settlement contract or marker">
+    On EVM chains, x402's exact scheme uses EIP-3009 on the stablecoin. Elsewhere, look for a
+    facilitator convention — XRPL uses a SourceTag.
+  </Step>
+  <Step title="Discover, do not assume">
+    Tally every selector or marker you see, let the dominant one emerge, then validate it
+    structurally. `base.mjs` does this with calldata shape plus a plausible time window.
+  </Step>
+  <Step title="Recover the true payer">
+    If a facilitator submits on the payer's behalf, find where the real payer is recorded. On
+    Base it is inside the signed authorization, not the transaction sender.
+  </Step>
+</Steps>
+
+## Tests
+
+Add a fixture to `test/authenticity.test.mjs` with your chain's real measurements. Pinning to
+observed data means a scoring change that breaks your chain fails CI.

@@ -1,0 +1,93 @@
+---
+title: "The Authenticity Score"
+description: "Four signals, one number, 0-100."
+---
+
+A composite of four signals a test harness cannot cheaply fake. Every scan returns it,
+along with the evidence behind each signal.
+
+## Signals
+
+<AccordionGroup>
+  <Accordion title="Value diversity — 40%" icon="chart-simple">
+    **Distinct payment amounts ÷ total payments.** Full marks at 30%+.
+
+    Metered billing produces computed amounts: `0.020325` is what 6,775 tokens cost. A loop
+    produces `0.001` because a developer typed it once.
+
+    The strongest signal by a distance, and the hardest to fake — faking it means building
+    the metering you were pretending to have.
+  </Accordion>
+  <Accordion title="Payer diversity — 25%" icon="users">
+    **Unique payer addresses**, log-scaled. One payer ≈ 0; 60+ ≈ full marks.
+
+    Real demand comes from many wallets in an uneven distribution. XRPL's nine payers each
+    fired 17–18 payments in the same window — near-identical counts, metronomic spacing.
+    That evenness is the signature.
+  </Accordion>
+  <Accordion title="Failure presence — 15%" icon="triangle-exclamation">
+    **Failure rate**, peak credit at 1–5%.
+
+    Counter-intuitive but reliable: real commerce fails. Insufficient balance, missing trust
+    line, expired invoice. A flawless 100% success rate across hundreds of payments
+    describes a controlled environment, not a market.
+
+    Both extremes are penalised — 0% scores 0.1, heavy failure scores 0.25.
+  </Accordion>
+  <Accordion title="Tail presence — 20%" icon="arrow-trend-up">
+    **max ÷ median**, log-scaled. A 1000× spread earns full marks.
+
+    Real distributions have outliers — a bulk job, a large inference run. Base's max was
+    $24.37 against a $0.005 median: 4,874×. XRPL's max equalled its p95. A distribution with
+    no tail is a distribution with no customers.
+  </Accordion>
+</AccordionGroup>
+
+## Bands
+
+| Score | Band | Read as |
+|---|---|---|
+| 70–100 | `commerce` | Behaves like real metered commerce |
+| 45–69 | `mixed` | Genuine usage alongside significant automated traffic |
+| 25–44 | `mostly-synthetic` | Treat headline counts with caution |
+| 0–24 | `test-harness` | Counts do not represent commerce |
+
+Below **20 observed payments** no score is returned — `band` is `insufficient-data`. A
+confident number from a thin sample is worse than no number.
+
+## Unmeasurable signals are dropped, not zeroed
+
+<Warning>
+Base payments are decoded from block calldata, which cannot reveal reverts — so failure
+rate is genuinely unknowable there without a second receipt fetch.
+
+Scoring that as "0% failures, therefore suspicious" would penalise Base for **our**
+instrumentation gap. Instead the signal is omitted, remaining weights renormalise to sum to
+1, and the response says so:
+
+```json
+"omittedSignals": ["failurePresence"],
+"caveat": "failurePresence not measurable on this chain; remaining weights renormalised."
+```
+</Warning>
+
+## Worked example
+
+```json
+{
+  "score": 71,
+  "band": "commerce",
+  "note": "Behaves like real metered commerce.",
+  "signals": {
+    "valueDiversity": { "score": 100, "weight": 0.471, "evidence": "340 distinct values across 842 payments (40.4%)" },
+    "payerDiversity": { "score": 100, "weight": 0.294, "evidence": "90 unique payers" },
+    "tailPresence":   { "score": 100, "weight": 0.235, "evidence": "max is 4874× the median" }
+  },
+  "omittedSignals": ["failurePresence"]
+}
+```
+
+<Tip>
+Every signal carries its own `evidence` string. If you disagree with a score, the response
+tells you exactly which observation drove it.
+</Tip>

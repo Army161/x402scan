@@ -1,0 +1,56 @@
+---
+title: "Introduction"
+description: "Counting x402 transactions tells you almost nothing. This measures whether they are real."
+---
+
+AI agents settle payments autonomously using the [x402](https://x402.org) protocol. Every
+ecosystem dashboard reports the same headline number: **transaction count**.
+
+On a chain where a transaction costs $0.0002, that number is close to meaningless.
+
+<Warning>
+1.4 million agentic payments settled on the XRP Ledger. Total fees paid across all of them:
+**about $280.** A single integration test suite, a hackathon weekend, or one agent looping
+against a demo API manufactures a million payments for roughly the price of a coffee.
+</Warning>
+
+x402scan measures whether settlement **behaves** like commerce — using signals a test
+harness cannot cheaply fake.
+
+## The finding that motivated this
+
+Both chains scanned the same day, same method, ~8 minute windows.
+
+<CardGroup cols={2}>
+  <Card title="Base — 71/100" icon="circle-check">
+    **commerce**
+
+    842 payments · 90 payers · **340 distinct values** · max $24.37 · ~$9,990/day
+  </Card>
+  <Card title="XRP Ledger — 8/100" icon="triangle-exclamation">
+    **test harness**
+
+    156 payments · **9 payers** · **3 distinct values** · max ~$0.003 · ~$42/day
+  </Card>
+</CardGroup>
+
+XRPL's 156 payments had exactly three distinct amounts: `0.001`, `0.002`, `0.003`. Nothing
+else. Nine wallets, firing metronomically, zero failures.
+
+Base's 842 payments had 340 distinct amounts — `0.020325`, `0.034555`, `0.013248`. Nobody
+types those. They are **computed**: per-token inference billing, metered API pricing.
+
+Same protocol. One is a market; one is a loop. **Transaction counts cannot tell them apart.**
+
+## What you get
+
+<CardGroup cols={2}>
+  <Card title="CLI" icon="terminal" href="/cli">Scan any supported chain from your terminal</Card>
+  <Card title="MCP server" icon="robot" href="/mcp">Give any AI agent live agentic-payment data</Card>
+  <Card title="Data API" icon="code" href="/api-reference/scan">JSON endpoints, free tier, no signup</Card>
+  <Card title="Library" icon="cube" href="/library">Import the score into your own tooling</Card>
+</CardGroup>
+
+<Note>
+Zero dependencies. Node 18+. No API keys, no accounts, no build step — public RPCs only.
+</Note>

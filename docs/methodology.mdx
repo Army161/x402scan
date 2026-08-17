@@ -1,0 +1,54 @@
+---
+title: "Methodology"
+description: "How payments are identified on each chain."
+---
+
+## Fingerprints
+
+| | XRP Ledger | Base |
+|---|---|---|
+| **Marker** | `SourceTag 804681468` | EIP-3009 `transferWithAuthorization` on USDC |
+| **Unit sampled** | Validated ledgers | Blocks |
+| **Reorg handling** | None needed — deterministic finality | Recent blocks only |
+| **Payer identity** | Transaction sender | Recovered from the signed authorization |
+
+## The Base selector is discovered, not assumed
+
+x402's EVM "exact" scheme settles USDC via EIP-3009, submitted by a facilitator on the
+payer's behalf. Rather than hardcode a selector from documentation, the scanner:
+
+<Steps>
+  <Step title="Tallies every selector called on USDC">
+    No prior assumption about which one matters.
+  </Step>
+  <Step title="Decodes anything matching the EIP-3009 calldata shape">
+    Nine words: `from`, `to`, `value`, `validAfter`, `validBefore`, `nonce`, `v`, `r`, `s`.
+  </Step>
+  <Step title="Validates the time window is plausible">
+    `validBefore` must sit in a sane range around the block timestamp, which rejects
+    coincidental shape matches.
+  </Step>
+  <Step title="0xe3ee160e falls out empirically">
+    194 of 493 USDC calls in the first pilot. No ABI file, no trusted third party.
+  </Step>
+</Steps>
+
+<Note>
+EIP-3009 preserves the **true payer** inside the signed authorization, so Base payer counts
+reflect real spenders even though facilitators submit the transactions. XRPL has no
+equivalent — the submitter is the payer — which is why cross-chain payer comparisons treat
+Base's number as the more honest one.
+</Note>
+
+## USD conversion
+
+Prices are fetched live from **three independent sources** (CoinGecko, Coinbase, Kraken) and
+the **median** taken. The rate, its provenance, source count and spread are recorded on
+every result.
+
+<Warning>
+An early version hardcoded XRP at $2.50 when it was trading at $1.008 — overstating every
+XRPL dollar figure by 2.5×. Hence: never a hardcoded rate, always recorded provenance.
+</Warning>
+
+USDC is treated as $1.00 (stablecoin peg) rather than fetched.

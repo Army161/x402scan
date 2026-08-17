@@ -1,0 +1,72 @@
+---
+title: "MCP server"
+description: "Give any AI agent live agentic-payment data."
+---
+
+x402scan ships an MCP server, so an agent can answer *"is x402 volume on Base real?"* by
+measuring the chain rather than repeating a press release.
+
+## Install
+
+<Tabs>
+  <Tab title="Claude Code">
+    ```bash
+    claude mcp add --scope user x402scan -- npx -y x402scan mcp
+    ```
+  </Tab>
+  <Tab title="Claude Desktop / Cursor">
+    ```json
+    {
+      "mcpServers": {
+        "x402scan": { "command": "npx", "args": ["-y", "x402scan", "mcp"] }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="From a local clone">
+    ```bash
+    claude mcp add --scope user x402scan -- node /path/to/x402scan/src/cli.mjs mcp
+    ```
+  </Tab>
+</Tabs>
+
+## Tools
+
+<AccordionGroup>
+  <Accordion title="scan_chain" icon="magnifying-glass">
+    Measure one chain and return its Authenticity Score.
+
+    `chain` (required) — `xrpl` or `base`. `units` (optional) — default 150.
+
+    Takes 30–90s. The tool description says so, which stops the model retrying.
+  </Accordion>
+  <Accordion title="compare_chains" icon="scale-balanced">
+    Scan every supported chain and compare side by side.
+  </Accordion>
+  <Accordion title="explain_authenticity_score" icon="book">
+    Returns the full rubric, bands, and reference measurements — so the agent can explain a
+    score rather than just quote it.
+  </Accordion>
+  <Accordion title="read_trend" icon="chart-line">
+    Read a trend file written by `x402scan watch`.
+  </Accordion>
+</AccordionGroup>
+
+## Try it
+
+> Is the agentic payment volume on Base real commerce, or mostly testing?
+
+> Compare Base and XRPL for real x402 activity and explain what drives the difference.
+
+> What would make you change your mind about the XRPL score?
+
+<Note>
+Every response carries a `caveat` field noting that daily figures are extrapolations, so the
+agent passes that caution on rather than presenting an estimate as a measurement.
+</Note>
+
+## Implementation
+
+The server implements MCP's JSON-RPC directly instead of importing the SDK, so the package
+stays zero-dependency and `npx x402scan mcp` needs no install step. Supported methods:
+`initialize`, `notifications/initialized`, `tools/list`, `tools/call`, `ping`.

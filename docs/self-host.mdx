@@ -1,0 +1,52 @@
+---
+title: "Self-hosting"
+description: "Deploy the dashboard and Data API."
+---
+
+## Vercel
+
+```bash
+git clone https://github.com/YOUR_USER/x402scan
+cd x402scan
+npx vercel --prod
+```
+
+No build step, no framework, no bundler. Serverless functions in `api/` import the same
+`src/` the CLI uses, so there is exactly one implementation of the score.
+
+## Configuration
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `X402SCAN_KEYS` | no | Comma-separated `key:tier` pairs, e.g. `abc123:pro,xyz789:intel` |
+
+With no keys configured every request is served on the free tier. Nothing breaks.
+
+## Anywhere else
+
+Handlers follow the standard Node `(req, res)` contract, so they port to Netlify Functions,
+Cloudflare Workers (with a shim), or any Node server. `scripts/dev-server.mjs` is a 40-line
+example.
+
+```bash
+node scripts/dev-server.mjs   # http://localhost:3000
+```
+
+## Caching matters more than you think
+
+<Warning>
+A scan takes 30–90 seconds and hammers public RPC endpoints. Without caching, a handful of
+concurrent users will get you rate-limited into uselessness.
+
+Two layers ship by default: an in-process memo (4 min) and CDN `s-maxage`. **Do not disable
+these** unless you run your own RPC nodes.
+</Warning>
+
+## Your own RPC endpoints
+
+```js
+await scanChain('base', {
+  endpoints: ['https://your-base-node.example.com'],
+  units: 1000,
+});
+```

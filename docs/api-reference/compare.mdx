@@ -1,0 +1,43 @@
+---
+title: "GET /api/compare"
+description: "All chains, ranked by Authenticity Score."
+---
+
+```bash
+curl 'https://YOUR_DEPLOY.vercel.app/api/compare?units=150'
+```
+
+## Query parameters
+
+| Parameter | Type | Required | Default |
+|---|---|---|---|
+| `units` | number | no | `150` |
+| `key` | string | no | — (or `x-api-key` header) |
+
+## Response
+
+```json
+{
+  "observedAt": "2026-08-17T16:04:22.118Z",
+  "leader": "base",
+  "chains": [
+    { "chain": "base", "authenticity": { "score": 71, "band": "commerce" } },
+    { "chain": "xrpl", "authenticity": { "score": 8, "band": "test-harness" } }
+  ],
+  "tier": "free",
+  "cache": "miss"
+}
+```
+
+`chains` is sorted by score descending. `leader` is the highest-scoring chain that succeeded.
+
+<Warning>
+Chain failures are returned **inline**, not thrown — a chain whose RPC was down appears as
+`{ "chain": "xrpl", "error": "..." }` while the rest still return. Always check for `error`
+before reading `authenticity`.
+</Warning>
+
+<Note>
+This scans every chain, so it takes longer than a single `/api/scan`. Cached aggressively for
+that reason.
+</Note>

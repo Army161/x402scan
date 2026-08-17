@@ -1,0 +1,36 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "x402scan",
+  "description": "Measure whether agentic payment volume is real commerce or a test harness.",
+  "colors": { "primary": "#0d5c56", "light": "#5fbfae", "dark": "#0d5c56" },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          { "group": "Start here", "pages": ["introduction", "quickstart", "why-counts-lie"] },
+          { "group": "The score", "pages": ["authenticity-score", "methodology", "limitations"] },
+          { "group": "Interfaces", "pages": ["cli", "mcp", "library"] },
+          { "group": "Chains", "pages": ["chains/base", "chains/xrpl", "chains/adding-a-chain"] },
+          { "group": "Deploy", "pages": ["self-host"] }
+        ]
+      },
+      {
+        "tab": "API reference",
+        "groups": [
+          { "group": "Endpoints", "pages": ["api-reference/scan", "api-reference/compare", "api-reference/health"] },
+          { "group": "Access", "pages": ["api-reference/tiers", "api-reference/errors"] }
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [{ "label": "GitHub", "href": "https://github.com/YOUR_USER/x402scan" }],
+    "primary": { "type": "button", "label": "Run a scan", "href": "https://YOUR_DEPLOY.vercel.app" }
+  },
+  "footer": {
+    "socials": { "github": "https://github.com/YOUR_USER/x402scan" }
+  }
+}

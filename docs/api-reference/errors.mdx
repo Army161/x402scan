@@ -1,0 +1,44 @@
+---
+title: "Errors"
+description: "What can go wrong and what it means."
+---
+
+Every error is JSON with an `error` field, and usually a `hint`.
+
+| Status | Meaning | What to do |
+|---|---|---|
+| `400` | Missing or unknown `chain` | Check `/api/health` for supported chains |
+| `405` | Wrong method | All endpoints are `GET` |
+| `502` | Scan failed upstream | Public RPCs throttled — retry, or lower `units` |
+
+## Examples
+
+```json
+{ "error": "Unknown chain \"doge\"", "hint": "Supported: xrpl, base" }
+```
+
+```json
+{
+  "error": "Scan failed: non-JSON response: FUP exceeded. Please run your own node.",
+  "hint": "Public RPC endpoints throttle under load. Try again shortly, or lower --units."
+}
+```
+
+<Note>
+`502` is genuinely common. Public RPC endpoints rate-limit aggressively and a scan makes
+hundreds of calls. Retry with a smaller `units`, or [use your own
+node](/self-host#your-own-rpc-endpoints).
+</Note>
+
+## Partial failures on /api/compare
+
+`/api/compare` never fails wholesale because one chain is down:
+
+```json
+{
+  "chains": [
+    { "chain": "base", "authenticity": { "score": 71 } },
+    { "chain": "xrpl", "error": "XRPL: could not read validated ledger head" }
+  ]
+}
+```

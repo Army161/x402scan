@@ -1,0 +1,26 @@
+---
+title: "GET /api/health"
+description: "Liveness, capabilities, and tier limits."
+---
+
+```bash
+curl 'https://YOUR_DEPLOY.vercel.app/api/health'
+```
+
+```json
+{
+  "ok": true,
+  "service": "x402scan",
+  "version": "0.1.0",
+  "chains": ["xrpl", "base"],
+  "tiers": {
+    "free": "no key · 150 units · 5 min cache",
+    "pro": "x-api-key · 1000 units · 1 min cache",
+    "intel": "x-api-key · 4000 units · uncached"
+  },
+  "caveat": "Scans sample a short recent window. Daily figures are extrapolations — order of magnitude, not accounting."
+}
+```
+
+Cheap and cached for 60s. Use `chains` to discover supported chains rather than hardcoding
+them — new adapters appear here automatically.

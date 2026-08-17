@@ -1,0 +1,55 @@
+---
+title: "Tiers and access"
+description: "What each tier allows, and how limits behave."
+---
+
+| Tier | Auth | Max units | Cache TTL |
+|---|---|---|---|
+| **Free** | none | 150 | 5 min |
+| **Pro** | `x-api-key` | 1 000 | 1 min |
+| **Intel** | `x-api-key` | 4 000 | uncached |
+
+The free tier needs no signup, no account, and no key.
+
+## Limits clamp, they do not reject
+
+Ask for more units than your tier allows and you get the ceiling plus an explanation — not a
+`403`.
+
+```json
+{ "clamped": { "asked": 4000, "allowed": 150, "tier": "free" } }
+```
+
+An unrecognised key degrades to free with a warning rather than failing:
+
+```json
+{ "warning": "API key not recognised; served on the free tier." }
+```
+
+<Note>
+Failing a data request because someone was ambitious is hostile design. You always get an
+answer; you are simply told when it was narrower than you asked for.
+</Note>
+
+## Sending a key
+
+<CodeGroup>
+```bash Header (preferred)
+curl -H 'x-api-key: YOUR_KEY' '.../api/scan?chain=base&units=1000'
+```
+```bash Query string
+curl '.../api/scan?chain=base&units=1000&key=YOUR_KEY'
+```
+</CodeGroup>
+
+## Self-hosted keys
+
+```
+X402SCAN_KEYS=abc123:pro,xyz789:intel
+```
+
+<Warning>
+This is a deliberate placeholder for a billing system, not a substitute for one. Keys are
+compared as plain strings from an environment variable — fine for a handful of partners, not
+for public sale.
+</Warning>
