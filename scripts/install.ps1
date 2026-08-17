@@ -1,5 +1,5 @@
 # x402scan installer — Windows (PowerShell 5.1+ / PowerShell 7+).
-#   irm https://raw.githubusercontent.com/YOUR_USER/x402scan/main/scripts/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/Army161/x402scan/main/scripts/install.ps1 | iex
 
 $ErrorActionPreference = 'Stop'
 

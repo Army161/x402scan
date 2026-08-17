@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # x402scan installer — macOS and Linux.
-#   curl -fsSL https://raw.githubusercontent.com/YOUR_USER/x402scan/main/scripts/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/Army161/x402scan/main/scripts/install.sh | bash
 set -euo pipefail
 
 BOLD=$'\033[1m'; DIM=$'\033[2m'; GREEN=$'\033[32m'; RED=$'\033[31m'; YELLOW=$'\033[33m'; OFF=$'\033[0m'

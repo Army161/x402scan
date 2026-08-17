@@ -65,19 +65,19 @@ npm install -g x402scan
 ### Windows (PowerShell)
 
 ```powershell
-irm https://raw.githubusercontent.com/YOUR_USER/x402scan/main/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/Army161/x402scan/main/scripts/install.ps1 | iex
 ```
 
 ### macOS / Linux
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOUR_USER/x402scan/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Army161/x402scan/main/scripts/install.sh | bash
 ```
 
 ### From source
 
 ```bash
-git clone https://github.com/YOUR_USER/x402scan && cd x402scan && npm link
+git clone https://github.com/Army161/x402scan && cd x402scan && npm link
 ```
 
 No build step. No `npm install`. See [Why zero dependencies](#why-zero-dependencies).
