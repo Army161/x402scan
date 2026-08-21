@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return fail(res, 405, 'Method not allowed');
 
   const url = new URL(req.url, 'http://x');
-  const tier = resolveTier(req);
+  const tier = await resolveTier(req);
   const { units, clamped } = clampUnits(url.searchParams.get('units'), tier);
   const key = `compare:${units}`;
 

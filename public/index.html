@@ -153,6 +153,26 @@
   <p class="sig-note">Free tier needs no key: 150 units, 5-minute cache. Higher sample sizes and fresher data need an <code>x-api-key</code>. CLI and MCP server: <code>npx x402scan</code>.</p>
 </section>
 
+
+<section class="explain" id="pricing">
+  <h2>Pricing</h2>
+  <p>The free tier needs no signup and no key. Paid tiers raise the sample ceiling and cut cache staleness — the score is identical on every tier.</p>
+  <div class="grid" style="padding-top:.6rem">
+    <div class="card"><div class="card-head"><h2>Free</h2><span>$0</span></div>
+      <dl class="metrics"><dt>Sample ceiling</dt><dd>150 units</dd>
+      <dt>Cache</dt><dd>5 min</dd><dt>API key</dt><dd>not needed</dd></dl></div>
+    <div class="card"><div class="card-head"><h2>Pro</h2><span id="p-pro">—</span></div>
+      <dl class="metrics"><dt>Sample ceiling</dt><dd>1,000 units</dd>
+      <dt>Cache</dt><dd>1 min</dd><dt>API key</dt><dd>included</dd></dl>
+      <div class="signals"><button data-tier="pro" class="buy">Subscribe</button></div></div>
+    <div class="card"><div class="card-head"><h2>Intel</h2><span id="p-intel">—</span></div>
+      <dl class="metrics"><dt>Sample ceiling</dt><dd>4,000 units</dd>
+      <dt>Cache</dt><dd>uncached</dd><dt>API key</dt><dd>included</dd></dl>
+      <div class="signals"><button data-tier="intel" class="buy">Subscribe</button></div></div>
+  </div>
+  <p class="sig-note" id="billing-status"></p>
+</section>
+
 <footer>
   <p><strong>Caveat, stated plainly:</strong> each scan samples a short recent window (roughly 2–10 minutes) and extrapolates daily figures from it. That is order of magnitude, not accounting. Small samples move the score — a 60-unit Base scan read 89 where a 250-unit scan read 71. Diurnal and weekly patterns are invisible in a single sample.</p>
   <p>Public RPC endpoints throttle under load. Always check <code>sampling.scanned</code> against <code>sampling.requested</code> before quoting a number.</p>
@@ -247,6 +267,40 @@ async function run() {
 }
 
 $('run').addEventListener('click', run);
+
+// --- billing ---
+(async () => {
+  const status = document.getElementById('billing-status');
+  let cfg = {};
+  try { cfg = await (await fetch('/api/health')).json(); } catch {}
+  const live = cfg.billing?.configured;
+  if (cfg.billing?.prices) {
+    for (const [tier, label] of Object.entries(cfg.billing.prices)) {
+      const el = document.getElementById('p-' + tier);
+      if (el && label) el.textContent = label;
+    }
+  }
+  document.querySelectorAll('.buy').forEach(btn => {
+    if (!live) { btn.disabled = true; btn.textContent = 'Not yet available'; return; }
+    btn.addEventListener('click', async () => {
+      btn.disabled = true; btn.textContent = 'Opening…';
+      try {
+        const r = await fetch('/api/checkout', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tier: btn.dataset.tier }),
+        });
+        const d = await r.json();
+        if (d.url) { location.href = d.url; return; }
+        throw new Error(d.error || 'Checkout unavailable');
+      } catch (e) {
+        status.textContent = e.message;
+        btn.disabled = false; btn.textContent = 'Subscribe';
+      }
+    });
+  });
+  if (!live) status.textContent = 'Billing is not configured on this deployment — the free tier is fully functional.';
+})();
+
 </script>
 </body>
 </html>

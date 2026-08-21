@@ -7,6 +7,8 @@
  */
 
 /** Warm in-process cache. Survives within a lambda instance; the CDN does the rest. */
+import { tierForApiKey } from './_stripe.js';
+
 const memo = new Map();
 const MEMO_TTL_MS = 4 * 60 * 1000;
 
@@ -25,23 +27,45 @@ export function remember(key, value) {
 
 /**
  * Tiers. Keys live in the X402SCAN_KEYS env var as `key:tier` pairs,
- * comma-separated. Real billing is Stage 7 — this is the seam it plugs into.
+ * comma-separated. Paid tiers resolve against live Stripe subscriptions.
  */
-const TIERS = {
-  free: { maxUnits: 150, chains: ['xrpl', 'base'], cacheSeconds: 300 },
-  pro: { maxUnits: 1000, chains: ['xrpl', 'base'], cacheSeconds: 60 },
-  intel: { maxUnits: 4000, chains: ['xrpl', 'base'], cacheSeconds: 0 },
+export const TIERS = {
+  free:    { maxUnits: 150,  cacheSeconds: 300 },
+  starter: { maxUnits: 400,  cacheSeconds: 120 },
+  pro:     { maxUnits: 1000, cacheSeconds: 60 },
+  intel:   { maxUnits: 4000, cacheSeconds: 0 },
 };
 
-export function resolveTier(req) {
+/**
+ * Resolve the caller's tier. Two sources, checked in order:
+ *   1. X402SCAN_KEYS env var  — static keys for partners and internal use
+ *   2. Stripe subscription    — real paying customers, looked up live
+ *
+ * Stripe is authoritative for paid access and is checked live, so a cancelled
+ * or past_due subscription stops working immediately without a revocation job.
+ * Results are memoised briefly to keep the cost to one API call per key.
+ */
+export async function resolveTier(req) {
   const key = req.headers['x-api-key'] || new URL(req.url, 'http://x').searchParams.get('key');
   if (!key) return { name: 'free', ...TIERS.free };
-  const table = Object.fromEntries(
+
+  const staticTable = Object.fromEntries(
     (process.env.X402SCAN_KEYS || '').split(',').filter(Boolean).map(p => p.split(':'))
   );
-  const tier = table[key];
-  if (!tier || !TIERS[tier]) return { name: 'free', ...TIERS.free, keyRejected: true };
-  return { name: tier, ...TIERS[tier] };
+  const staticTier = staticTable[key];
+  if (staticTier && TIERS[staticTier]) return { name: staticTier, ...TIERS[staticTier], source: 'static' };
+
+  const memoKey = `tier:${key}`;
+  const hit = cached(memoKey);
+  if (hit) return hit;
+
+  const stripeTier = await tierForApiKey(key);
+  if (stripeTier && TIERS[stripeTier]) {
+    return remember(memoKey, { name: stripeTier, ...TIERS[stripeTier], source: 'stripe' });
+  }
+
+  // Unrecognised or inactive: degrade to free with a warning rather than 401.
+  return { name: 'free', ...TIERS.free, keyRejected: true };
 }
 
 export function send(res, status, body, { cacheSeconds = 0 } = {}) {

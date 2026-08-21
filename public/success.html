@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>x402scan — subscription active</title>
+<style>
+  :root{--ground:#f6f7f7;--surface:#fff;--ink:#101617;--muted:#55605f;--faint:#828d8c;
+    --rule:#dfe4e3;--signal:#0d5c56;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:ui-sans-serif,-apple-system,"Segoe UI",Roboto,system-ui,sans-serif}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#101314;--surface:#171b1c;
+    --ink:#e8eceb;--muted:#9aa5a3;--faint:#6f7a79;--rule:#262c2d;--signal:#5fbfae}}
+  :root[data-theme="dark"]{--ground:#101314;--surface:#171b1c;--ink:#e8eceb;--muted:#9aa5a3;
+    --faint:#6f7a79;--rule:#262c2d;--signal:#5fbfae}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font:16px/1.6 var(--sans)}
+  .wrap{max-width:36rem;margin:0 auto;padding:5rem 1.5rem;display:flex;flex-direction:column;gap:1.3rem}
+  h1{font-size:1.8rem;letter-spacing:-.02em;margin:0}
+  p{margin:0;color:var(--muted)}
+  .card{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:1.3rem;
+    display:flex;flex-direction:column;gap:.7rem}
+  .label{font:600 .62rem/1.4 var(--mono);letter-spacing:.15em;text-transform:uppercase;color:var(--faint)}
+  code{font:.85rem var(--mono);background:var(--ground);border:1px solid var(--rule);
+    padding:.7rem .8rem;border-radius:4px;display:block;word-break:break-all;color:var(--ink)}
+  a{color:var(--signal)}
+  button{font:600 .85rem var(--sans);padding:.5rem .9rem;border-radius:4px;cursor:pointer;
+    border:1px solid var(--rule);background:var(--ground);color:var(--ink);align-self:flex-start}
+</style></head><body>
+<div class="wrap">
+  <h1>Subscription active</h1>
+  <p>Your API key is below. It is shown here and in your Stripe receipt — store it somewhere safe.</p>
+
+  <div class="card">
+    <span class="label">Your API key</span>
+    <code id="key">loading…</code>
+    <button id="copy">Copy</button>
+  </div>
+
+  <div class="card">
+    <span class="label">Use it</span>
+    <code>curl -H &apos;x-api-key: YOUR_KEY&apos; &apos;/api/scan?chain=base&amp;units=1000&apos;</code>
+  </div>
+
+  <p>Full reference: <a href="/">dashboard</a> · <a href="https://github.com/Army161/x402scan">docs</a></p>
+  <p style="font-size:.85rem;color:var(--faint)">Manage or cancel any time from the billing portal link in your Stripe receipt email. Access stops the moment a subscription ends — tiers are checked live.</p>
+</div>
+<script>
+  const params = new URLSearchParams(location.search);
+  const el = document.getElementById('key');
+  const sid = params.get('session_id');
+  // The key travels in the checkout session; surfaced here without an account system.
+  fetch('/api/session?id=' + encodeURIComponent(sid || ''))
+    .then(r => r.json())
+    .then(d => { el.textContent = d.apiKey || 'Check your Stripe receipt for your key.'; })
+    .catch(() => { el.textContent = 'Check your Stripe receipt for your key.'; });
+  document.getElementById('copy').addEventListener('click', () => {
+    navigator.clipboard.writeText(el.textContent).then(() => {
+      const b = document.getElementById('copy');
+      b.textContent = 'Copied'; setTimeout(() => (b.textContent = 'Copy'), 1500);
+    });
+  });
+</script>
+</body></html>

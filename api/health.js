@@ -1,6 +1,7 @@
 /** GET /api/health — liveness plus the honest capability list. */
 import { CHAIN_IDS } from '../src/index.mjs';
 import { send } from './_lib.js';
+import { stripeConfigured, priceForTier } from './_stripe.js';
 
 export default function handler(req, res) {
   send(res, 200, {
@@ -17,6 +18,10 @@ export default function handler(req, res) {
       free: 'no key · 150 units · 5 min cache',
       pro: 'x-api-key · 1000 units · 1 min cache',
       intel: 'x-api-key · 4000 units · uncached',
+    },
+    billing: {
+      configured: stripeConfigured() && Boolean(priceForTier('pro')),
+      tiers: ['free', 'starter', 'pro', 'intel'],
     },
     caveat: 'Scans sample a short recent window. Daily figures are extrapolations — order of magnitude, not accounting.',
   }, { cacheSeconds: 60 });

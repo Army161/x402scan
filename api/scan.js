@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     return fail(res, 400, `Unknown chain "${chain}"`, `Supported: ${CHAIN_IDS.join(', ')}`);
   }
 
-  const tier = resolveTier(req);
+  const tier = await resolveTier(req);
   const { units, clamped } = clampUnits(url.searchParams.get('units'), tier);
   const key = `scan:${chain}:${units}`;
 
