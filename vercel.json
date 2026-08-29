@@ -3,9 +3,6 @@
   "functions": {
     "api/*.js": {
       "memory": 512
-    },
-    "api/webhook.js": {
-      "memory": 256
     }
   },
   "headers": [
