@@ -2,11 +2,9 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "api/*.js": {
-      "runtime": "nodejs20.x",
       "memory": 512
     },
     "api/webhook.js": {
-      "runtime": "nodejs20.x",
       "memory": 256
     }
   },
